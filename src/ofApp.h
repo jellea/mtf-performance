@@ -23,6 +23,7 @@ public:
     void setup();
     void update();
     void draw();
+    void exit();
     
     RegressionData trainingData;      		//This will store our training data
     GestureRecognitionPipeline pipeline;        //This is a wrapper for our classifier and any pre/post processing modules
@@ -44,5 +45,4 @@ public:
     
     ofxOscReceiver receiver;
     ofxMidiOut midiOut;
-    int channel;
 };

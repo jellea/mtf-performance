@@ -20,6 +20,9 @@ void ofApp::randomizeVals() {
 
 //--------------------------------------------------------------
 void ofApp::setup(){
+    midiOut.listPorts();
+    midiOut.openPort(0);
+    
     
     // setting random seed
     srand(static_cast <unsigned> (time(0)));
@@ -84,11 +87,13 @@ void ofApp::update(){
             if( pipeline.train( trainingData ) ){
                 cout << "Pipeline Trained";
                 training = false;
+                running = true;
             }else cout << "WARNING: Failed to train pipeline";
         }
         
         if (pipeline.getTrained() && training){
             training = false;
+            running = true;
         }
         
         if( pipeline.getTrained() && running ){
@@ -101,15 +106,23 @@ void ofApp::update(){
                 outputVals[i] = GRT::Util::limit(regressionData[i],0.0,1.0);
             }
         }
+
         
-        for(int i = 0; i < 4; i++) {
-            midiOut << NoteOn(i+1, 27+floor(outputVals[i]*60) ,  127);
-        }
+
         
-        //        for(int i = 0; i < 4; i++) {
-        //            midiOut << NoteOn(i+1, 27+floor(outputVals[i]*60) ,  127);
-        //        }
-        
+    }
+    
+    // QMI: 1v per octave
+    for(int i = 0; i < 4; i++) {
+        midiOut << NoteOn(i+1, 27+floor(outputVals[i]*60) ,  127);
+    }
+    // QMI: CV1 = Aftertouch
+    for(int i = 0; i < 4; i++) {
+        midiOut << Aftertouch(i+1, 27+floor(outputVals[i+4]*60));
+    }
+    // QMI: CV2 = Modwheel CC#1
+    for(int i = 0; i < 4; i++) {
+        midiOut << ControlChange(i+1,1, 27+floor(outputVals[i+8]*60));
     }
 }
 
@@ -238,5 +251,13 @@ void ofApp::gotMessage(ofMessage msg){
 //--------------------------------------------------------------
 void ofApp::dragEvent(ofDragInfo dragInfo){
     
+}
+
+
+//--------------------------------------------------------------
+void ofApp::exit() {
+    
+    // clean up
+    midiOut.closePort();
 }
 
